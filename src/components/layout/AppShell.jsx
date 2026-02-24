@@ -6,7 +6,7 @@ import { useModules } from "@/hooks/useModules";
 import { C } from "@/lib/constants";
 
 const NAV_ITEMS = [
-  { key: "/calendario", label: "Calendário", icon: "📅", module: null },
+  { key: "/calendario", label: "Gestão de Tarefas", icon: "📅", module: null },
   { key: "/financeiro", label: "Gestão Financeira", icon: "💰", module: null },
   { key: "/liberdade", label: "Jornada da Liberdade", icon: "🚭", module: "liberdade" },
   { key: "/dados", label: "Dados & Backup", icon: "💾", module: null },
