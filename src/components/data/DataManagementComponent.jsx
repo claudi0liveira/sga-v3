@@ -59,9 +59,9 @@ function convertLegacy(data, userId) {
           priority: t.priority || "Média",
           start_time: t.startTime || "09:00",
           duration: t.duration || 30,
-          status: t.status === true || t.status === "done" ? "done" : t.status === "partial" ? "partial" : t.status === "skipped" ? "skipped" : "scheduled",
+          status: t.status === "done" || t.status === true ? "done" : t.status === "partial" ? "partial" : t.status === "skipped" ? "skipped" : "scheduled",
           note: t.note || null,
-          todos: JSON.stringify(t.todos || []),
+          todos: t.todos || [],
           block: t.block || null,
           range_group: t.rangeGroup || null,
           range_index: t.rangeIndex != null ? t.rangeIndex : null,
@@ -80,7 +80,7 @@ function convertLegacy(data, userId) {
       result.day_history.push({
         user_id: userId,
         date,
-        snapshot: JSON.stringify(Array.isArray(snapshot) ? snapshot : []),
+        snapshot: Array.isArray(snapshot) ? snapshot : [],
         note: null,
       });
     }
@@ -281,6 +281,18 @@ export default function DataManagementComponent() {
       if (isLegacy) {
         setImportProgress("Convertendo formato antigo → v3...");
         data = convertLegacy(raw, user.id);
+        
+        // Clean existing data before legacy import to avoid duplicates
+        setImportProgress("Limpando dados antigos para reimportar...");
+        const cleanOrder = ["day_history", "liberty_entries", "reserve_items", "tasks", "expenses", "incomes", "reserves", "priorities", "quick_links", "liberty", "phase"];
+        for (const table of cleanOrder) {
+          if (table === "reserve_items") {
+            const { data: res } = await supabase.from("reserves").select("id").eq("user_id", user.id);
+            if (res?.length) await supabase.from("reserve_items").delete().in("reserve_id", res.map(r => r.id));
+          } else {
+            await supabase.from(table).delete().eq("user_id", user.id);
+          }
+        }
       } else {
         data = raw;
       }
@@ -298,20 +310,27 @@ export default function DataManagementComponent() {
 
         if (isLegacy) {
           // Batch insert for legacy (no IDs to conflict)
-          const batchSize = 50;
+          const batchSize = 25;
           for (let i = 0; i < rows.length; i += batchSize) {
             const batch = rows.slice(i, i + batchSize);
             const { error } = await supabase.from(table).insert(batch);
             if (error) {
+              console.warn(`Batch error on ${table}[${i}]:`, error.message);
               // Try one by one on batch fail
               for (const row of batch) {
                 const { error: e2 } = await supabase.from(table).insert(row);
-                if (e2) errors++;
-                else imported++;
+                if (e2) {
+                  errors++;
+                  if (errors <= 5) console.error(`Row error on ${table}:`, e2.message, JSON.stringify(row).slice(0, 200));
+                } else {
+                  imported++;
+                }
               }
             } else {
               imported += batch.length;
             }
+            // Progress update
+            setImportProgress(`Importando ${table} (${Math.min(i + batchSize, rows.length)}/${rows.length})...`);
           }
         } else {
           // Upsert for v3 format
