@@ -2,14 +2,14 @@
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
+import { useModules } from "@/hooks/useModules";
 import { C } from "@/lib/constants";
-import StatusBar from "@/components/layout/StatusBar";
 
 const NAV_ITEMS = [
-  { key: "/calendario", label: "Calendário", icon: "📅" },
-  { key: "/financeiro", label: "Gestão Financeira", icon: "💰" },
-  { key: "/liberdade", label: "Jornada da Liberdade", icon: "🚭" },
-  { key: "/docs", label: "Documentação", icon: "📖" },
+  { key: "/calendario", label: "Calendário", icon: "📅", module: null },
+  { key: "/financeiro", label: "Gestão Financeira", icon: "💰", module: null },
+  { key: "/liberdade", label: "Jornada da Liberdade", icon: "🚭", module: "liberdade" },
+  { key: "/docs", label: "Documentação", icon: "📖", module: null },
 ];
 
 export default function AppShell({ children }) {
@@ -17,6 +17,7 @@ export default function AppShell({ children }) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, signOut } = useAuth();
+  const { hasAccess, isAdmin } = useModules();
 
   const navigate = (path) => {
     router.push(path);
@@ -49,7 +50,7 @@ export default function AppShell({ children }) {
         </div>
 
         <div style={{ flex: 1 }}>
-          {NAV_ITEMS.map((item) => {
+          {NAV_ITEMS.filter((item) => !item.module || hasAccess(item.module)).map((item) => {
             const isActive = pathname.startsWith(item.key);
             return (
               <button key={item.key} onClick={() => navigate(item.key)} style={{
@@ -64,6 +65,21 @@ export default function AppShell({ children }) {
               </button>
             );
           })}
+          {isAdmin && (
+            <>
+              <div style={{ height: 1, background: C.border, margin: "8px 20px" }} />
+              <button onClick={() => navigate("/admin")} style={{
+                display: "flex", alignItems: "center", gap: 12, width: "100%", padding: "14px 20px",
+                border: "none", background: pathname === "/admin" ? C.accent + "12" : "transparent",
+                cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 500,
+                color: pathname === "/admin" ? C.accent : C.textMuted, transition: "all .2s",
+                borderRight: pathname === "/admin" ? `3px solid ${C.accent}` : "3px solid transparent",
+              }}>
+                <span style={{ fontSize: 18 }}>⚙️</span>
+                Painel Admin
+              </button>
+            </>
+          )}
         </div>
 
         <div style={{ padding: "16px 20px", borderTop: `1px solid ${C.border}` }}>
@@ -100,7 +116,6 @@ export default function AppShell({ children }) {
           <div style={{ width: 36 }} />
         </div>
 
-        <StatusBar />
         {children}
       </div>
     </>
