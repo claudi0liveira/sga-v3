@@ -3,6 +3,7 @@ import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useModules } from "@/hooks/useModules";
+import StatusBar from "@/components/layout/StatusBar";
 import { C } from "@/lib/constants";
 
 const NAV_ITEMS = [
@@ -116,6 +117,8 @@ export default function AppShell({ children }) {
           </div>
           <div style={{ width: 36 }} />
         </div>
+
+        <StatusBar />
 
         {children}
       </div>
