@@ -166,9 +166,9 @@ export default function LibertyPageComponent({ smokeDate, cravings, victories, s
   }, [smokeDate, now]);
 
   const handleReset = () => {
-    // Log days in cravings before resetting
+    // Log days achieved in VICTORIES before resetting
     if (totalDays > 0) {
-      addEntry("craving", `🔄 Recomeço — estava há ${totalDays} dia${totalDays !== 1 ? "s" : ""} livre`);
+      addEntry("victory", `🔄 Recomeço — conquistei ${totalDays} dia${totalDays !== 1 ? "s" : ""} livre!`);
     }
     resetJourney();
     setShowReset(false);
@@ -211,6 +211,12 @@ export default function LibertyPageComponent({ smokeDate, cravings, victories, s
         )}
       </div>
 
+      {/* Vontades e Vitórias - SIDE BY SIDE - right after reset */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
+        <EntrySection title="Vontades" emoji="⚡" entries={cravings} type="craving" onAdd={addEntry} color={C.medium} />
+        <EntrySection title="Vitórias" emoji="🏆" entries={victories} type="victory" onAdd={addEntry} color={C.done} />
+      </div>
+
       {/* Motivation */}
       <div style={{ padding: "12px 16px", background: C.done + "10", borderRadius: 12, marginBottom: 20, textAlign: "center" }}>
         <div style={{ fontSize: 13, color: C.done, fontStyle: "italic" }}>
@@ -224,12 +230,6 @@ export default function LibertyPageComponent({ smokeDate, cravings, victories, s
       </div>
 
       <MilestonesSection totalDays={totalDays} />
-
-      {/* Vontades e Vitórias - SIDE BY SIDE */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
-        <EntrySection title="Vontades" emoji="⚡" entries={cravings} type="craving" onAdd={addEntry} color={C.medium} />
-        <EntrySection title="Vitórias" emoji="🏆" entries={victories} type="victory" onAdd={addEntry} color={C.done} />
-      </div>
     </div>
   );
 }

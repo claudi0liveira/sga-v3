@@ -29,7 +29,8 @@ export default function CalendarDashboard({ allTasks, history, priorities, phase
     if (!day) return [];
     const dk = `${viewMonth.y}-${pad(viewMonth.m + 1)}-${pad(day)}`;
     const a = allTasks[dk] || [];
-    const h = history[dk]?.snapshot || [];
+    const hRaw = history[dk]?.snapshot || [];
+    const h = typeof hRaw === "string" ? (() => { try { return JSON.parse(hRaw); } catch { return []; } })() : Array.isArray(hRaw) ? hRaw : [];
     const combined = [...h];
     a.forEach((t) => { if (!combined.find((x) => x.id === t.id)) combined.push(t); });
     return combined;
@@ -308,7 +309,8 @@ export default function CalendarDashboard({ allTasks, history, priorities, phase
           {Array.from({ length: 7 }).map((_, i) => {
             const d = new Date(); d.setDate(d.getDate() - (6 - i));
             const dk = dateKey(d);
-            const tasks = history[dk]?.snapshot || allTasks[dk] || [];
+            const raw = history[dk]?.snapshot || allTasks[dk] || [];
+            const tasks = typeof raw === "string" ? (() => { try { return JSON.parse(raw); } catch { return []; } })() : Array.isArray(raw) ? raw : [];
             const label = d.toLocaleDateString("pt-BR", { weekday: "narrow" });
             const total = tasks.length;
             const done = tasks.filter((t) => t.status === STATUS.DONE).length;
