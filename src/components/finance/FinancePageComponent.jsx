@@ -28,10 +28,11 @@ function DashCard({ label, value, color, emoji }) {
   );
 }
 
-function IncomeForm({ onAdd, onCancel }) {
+function IncomeForm({ onAdd, onCancel, currentMonth }) {
   const [name, setName] = useState("");
   const [value, setValue] = useState("");
   const [day, setDay] = useState("5");
+  const [scope, setScope] = useState("global");
   return (
     <div style={{ padding: 14, background: C.bg, borderRadius: 12, marginTop: 10, animation: "fadeIn .3s ease" }}>
       <Input label="Nome da renda" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Salário" />
@@ -39,9 +40,21 @@ function IncomeForm({ onAdd, onCancel }) {
         <Input label="Valor mensal" type="number" min="0" step="0.01" value={value} onChange={(e) => setValue(e.target.value)} placeholder="0,00" />
         <Input label="Dia recebimento" type="number" min="1" max="28" value={day} onChange={(e) => setDay(e.target.value)} />
       </div>
+      <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+        <button onClick={() => setScope("global")} style={{
+          flex: 1, padding: "8px 12px", borderRadius: 8, cursor: "pointer", fontSize: 12, fontWeight: 600,
+          fontFamily: "'DM Sans',sans-serif", border: `1px solid ${scope === "global" ? C.accent : C.border}`,
+          background: scope === "global" ? C.accent + "15" : "transparent", color: scope === "global" ? C.accent : C.textMuted,
+        }}>🌐 Global (todos os meses)</button>
+        <button onClick={() => setScope("monthly")} style={{
+          flex: 1, padding: "8px 12px", borderRadius: 8, cursor: "pointer", fontSize: 12, fontWeight: 600,
+          fontFamily: "'DM Sans',sans-serif", border: `1px solid ${scope === "monthly" ? C.medium : C.border}`,
+          background: scope === "monthly" ? C.medium + "15" : "transparent", color: scope === "monthly" ? C.medium : C.textMuted,
+        }}>📅 Só este mês</button>
+      </div>
       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 10 }}>
         <Btn v="ghost" onClick={onCancel}>Cancelar</Btn>
-        <Btn onClick={() => { if (name && value) onAdd({ name, value: parseFloat(value), pay_day: parseInt(day) || 5 }); }} disabled={!name || !value}>✓ Salvar</Btn>
+        <Btn onClick={() => { if (name && value) onAdd({ name, value: parseFloat(value), pay_day: parseInt(day) || 5, scope, month_key: scope === "monthly" ? currentMonth : null }); }} disabled={!name || !value}>✓ Salvar</Btn>
       </div>
     </div>
   );
@@ -96,12 +109,17 @@ export default function FinancePageComponent({
   const [openReserve, setOpenReserve] = useState(null);
   const [addingItem, setAddingItem] = useState(null);
 
+  const monthIncomes = useMemo(() =>
+    (incomes || []).filter((i) => !i.scope || i.scope === "global" || i.month_key === month),
+    [incomes, month]
+  );
+
   const monthExpenses = useMemo(() =>
     (expenses || []).filter((e) => (e.month_key || monthKey(e.created_at)) === month),
     [expenses, month]
   );
 
-  const totalIncome = (incomes || []).reduce((s, i) => s + Number(i.value), 0);
+  const totalIncome = monthIncomes.reduce((s, i) => s + Number(i.value), 0);
   const totalPaid = monthExpenses.filter((e) => e.paid).reduce((s, e) => s + Number(e.value), 0);
   const totalProjected = monthExpenses.reduce((s, e) => s + Number(e.value), 0);
   const balance = totalIncome - totalPaid;
@@ -135,13 +153,18 @@ export default function FinancePageComponent({
           <span style={cs.title}>Rendas</span>
           <button onClick={() => setShowIncForm(!showIncForm)} style={{ border: "none", background: "none", cursor: "pointer", fontSize: 13, color: C.accent, fontWeight: 600, fontFamily: "'DM Sans',sans-serif" }}>+ Renda</button>
         </div>
-        {showIncForm && <IncomeForm onAdd={(inc) => { addIncome(inc); setShowIncForm(false); }} onCancel={() => setShowIncForm(false)} />}
-        {(incomes || []).length === 0 && !showIncForm ? (
+        {showIncForm && <IncomeForm onAdd={(inc) => { addIncome(inc); setShowIncForm(false); }} onCancel={() => setShowIncForm(false)} currentMonth={month} />}
+        {monthIncomes.length === 0 && !showIncForm ? (
           <div style={cs.empty}>Nenhuma renda neste mês. <button onClick={() => setShowIncForm(true)} style={{ border: "none", background: "none", color: C.accent, cursor: "pointer", fontWeight: 600, fontFamily: "'DM Sans',sans-serif", fontSize: 13 }}>Adicionar</button></div>
-        ) : (incomes || []).map((inc) => (
+        ) : monthIncomes.map((inc) => (
           <div key={inc.id} style={cs.row}>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 500, color: C.text }}>{inc.name}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: 14, fontWeight: 500, color: C.text }}>{inc.name}</span>
+                <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, fontWeight: 600, background: (!inc.scope || inc.scope === "global") ? C.accent + "20" : C.medium + "20", color: (!inc.scope || inc.scope === "global") ? C.accent : C.medium }}>
+                  {(!inc.scope || inc.scope === "global") ? "GLOBAL" : "MÊS"}
+                </span>
+              </div>
               <div style={{ fontSize: 11, color: C.textMuted }}>Dia {inc.pay_day || "—"}</div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>

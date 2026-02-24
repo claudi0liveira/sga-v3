@@ -68,7 +68,8 @@ export default function StatusBar() {
   const nowH = now.getHours();
   const nowM = now.getMinutes();
   const nowMinutes = nowH * 60 + nowM;
-  const activeTask = todayTasks.find((t) => {
+  // Priority: task with status "active" (user pressed play), then time-based
+  const activeTask = todayTasks.find((t) => t.status === "active") || todayTasks.find((t) => {
     if (t.status === "done" || t.status === "skipped") return false;
     const [h, m] = (t.time || "09:00").split(":").map(Number);
     const start = h * 60 + m;

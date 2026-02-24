@@ -8,24 +8,33 @@ import MiniCalendar from "@/components/ui/MiniCalendar";
 function Counter({ smokeDate, now }) {
   const start = new Date(smokeDate + "T00:00:00");
   const diff = now - start;
-  const totalDays = Math.floor(diff / 86400000);
-  const hours = Math.floor((diff % 86400000) / 3600000);
-  const minutes = Math.floor((diff % 3600000) / 60000);
+  const isNegative = diff < 0;
+  const absDiff = Math.abs(diff);
+  const totalDays = Math.floor(absDiff / 86400000);
+  const hours = Math.floor((absDiff % 86400000) / 3600000);
+  const minutes = Math.floor((absDiff % 3600000) / 60000);
+  const sign = isNegative ? "-" : "";
 
-  const numStyle = { fontSize: 36, fontWeight: 700, lineHeight: 1, color: C.text };
+  const numStyle = { fontSize: 36, fontWeight: 700, lineHeight: 1, color: isNegative ? C.accent : C.text };
   const labStyle = { fontSize: 11, color: C.textMuted, marginTop: 2 };
   const box = { textAlign: "center", flex: 1 };
+  const gradient = isNegative
+    ? "linear-gradient(135deg, #2e1a2e 0%, #161622 60%)"
+    : "linear-gradient(135deg, #1a2e1a 0%, #161622 60%)";
+  const borderCol = isNegative ? C.accent + "30" : C.done + "30";
+  const labelColor = isNegative ? C.accent : C.done;
+  const labelText = isNegative ? "Sua jornada começa em" : "Você está livre há";
 
   return (
-    <div style={{ padding: "28px 20px", background: "linear-gradient(135deg, #1a2e1a 0%, #161622 60%)", borderRadius: 20, border: `1px solid ${C.done}30`, marginBottom: 20, textAlign: "center" }}>
+    <div style={{ padding: "28px 20px", background: gradient, borderRadius: 20, border: `1px solid ${borderCol}`, marginBottom: 14, textAlign: "center" }}>
       <div style={{ fontSize: 40, marginBottom: 8 }}>🚭</div>
-      <div style={{ fontSize: 13, color: C.done, fontWeight: 600, marginBottom: 16 }}>Você está livre há</div>
+      <div style={{ fontSize: 13, color: labelColor, fontWeight: 600, marginBottom: 16 }}>{labelText}</div>
       <div style={{ display: "flex", justifyContent: "center", gap: 20 }}>
-        <div style={box}><div style={numStyle}>{totalDays}</div><div style={labStyle}>dia{totalDays !== 1 ? "s" : ""}</div></div>
+        <div style={box}><div style={numStyle}>{sign}{totalDays}</div><div style={labStyle}>dia{totalDays !== 1 ? "s" : ""}</div></div>
         <div style={{ ...numStyle, alignSelf: "center", fontSize: 20, color: C.textMuted }}>:</div>
-        <div style={box}><div style={numStyle}>{hours}</div><div style={labStyle}>hora{hours !== 1 ? "s" : ""}</div></div>
+        <div style={box}><div style={numStyle}>{sign}{hours}</div><div style={labStyle}>hora{hours !== 1 ? "s" : ""}</div></div>
         <div style={{ ...numStyle, alignSelf: "center", fontSize: 20, color: C.textMuted }}>:</div>
-        <div style={box}><div style={numStyle}>{minutes}</div><div style={labStyle}>min</div></div>
+        <div style={box}><div style={numStyle}>{sign}{minutes}</div><div style={labStyle}>min</div></div>
       </div>
     </div>
   );
@@ -79,7 +88,7 @@ function EntrySection({ title, emoji, entries, type, onAdd, color }) {
   const [text, setText] = useState("");
 
   return (
-    <div style={{ padding: "18px 20px", background: C.surface, borderRadius: 16, border: `1px solid ${C.border}`, marginBottom: 14 }}>
+    <div style={{ padding: "18px 20px", background: C.surface, borderRadius: 16, border: `1px solid ${C.border}` }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
         <span style={{ fontSize: 15, fontWeight: 600, color: C.text }}>{emoji} {title}</span>
         <span style={{ fontSize: 12, padding: "3px 10px", borderRadius: 8, background: color + "15", color, fontWeight: 600 }}>{entries.length}</span>
@@ -152,8 +161,18 @@ export default function LibertyPageComponent({ smokeDate, cravings, victories, s
 
   const totalDays = useMemo(() => {
     if (!smokeDate) return 0;
-    return Math.floor((now - new Date(smokeDate + "T00:00:00")) / 86400000);
+    const diff = now - new Date(smokeDate + "T00:00:00");
+    return Math.floor(diff / 86400000);
   }, [smokeDate, now]);
+
+  const handleReset = () => {
+    // Log days in cravings before resetting
+    if (totalDays > 0) {
+      addEntry("craving", `🔄 Recomeço — estava há ${totalDays} dia${totalDays !== 1 ? "s" : ""} livre`);
+    }
+    resetJourney();
+    setShowReset(false);
+  };
 
   if (!smokeDate) {
     return (
@@ -167,10 +186,36 @@ export default function LibertyPageComponent({ smokeDate, cravings, victories, s
     <div style={{ animation: "fadeIn .4s ease", maxWidth: 700, margin: "0 auto" }}>
       <Counter smokeDate={smokeDate} now={now} />
 
+      {/* Reset button - close to counter, with highlight */}
+      <div style={{ textAlign: "center", marginBottom: 16 }}>
+        {!showReset ? (
+          <button onClick={() => setShowReset(true)} style={{
+            border: `1px solid ${C.overtime}40`, background: C.overtime + "10", cursor: "pointer",
+            fontSize: 12, color: C.overtime, fontFamily: "'DM Sans',sans-serif", padding: "8px 20px",
+            borderRadius: 10, fontWeight: 600, transition: "all .2s",
+          }}>
+            🔄 Recomeçar jornada
+          </button>
+        ) : (
+          <div style={{ padding: 16, background: C.overtime + "10", borderRadius: 12, border: `1px solid ${C.overtime}30`, animation: "fadeIn .3s ease", maxWidth: 400, margin: "0 auto" }}>
+            <div style={{ fontSize: 13, color: C.text, marginBottom: 10 }}>
+              {totalDays > 0
+                ? `Registrar que estava há ${totalDays} dia${totalDays !== 1 ? "s" : ""} e recomeçar?`
+                : "Tem certeza? Isso reiniciará a jornada."}
+            </div>
+            <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+              <Btn v="danger" onClick={handleReset} style={{ fontSize: 12 }}>Sim, recomeçar</Btn>
+              <Btn v="ghost" onClick={() => setShowReset(false)} style={{ fontSize: 12 }}>Cancelar</Btn>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Motivation */}
       <div style={{ padding: "12px 16px", background: C.done + "10", borderRadius: 12, marginBottom: 20, textAlign: "center" }}>
         <div style={{ fontSize: 13, color: C.done, fontStyle: "italic" }}>
-          💪 {totalDays < 3 ? "O começo é o mais difícil. Você já está fazendo." :
+          💪 {totalDays < 0 ? "A contagem regressiva começou. Você já tomou a decisão." :
+               totalDays < 3 ? "O começo é o mais difícil. Você já está fazendo." :
                totalDays < 7 ? "Uma semana se aproxima. Cada hora conta." :
                totalDays < 30 ? "Seu corpo já sente a diferença. Continue." :
                totalDays < 90 ? "Mais de um mês. Isso é disciplina real." :
@@ -180,24 +225,10 @@ export default function LibertyPageComponent({ smokeDate, cravings, victories, s
 
       <MilestonesSection totalDays={totalDays} />
 
-      <EntrySection title="Vontades" emoji="⚡" entries={cravings} type="craving" onAdd={addEntry} color={C.medium} />
-      <EntrySection title="Vitórias" emoji="🏆" entries={victories} type="victory" onAdd={addEntry} color={C.done} />
-
-      {/* Reset */}
-      <div style={{ textAlign: "center", marginTop: 20, paddingBottom: 20 }}>
-        {!showReset ? (
-          <button onClick={() => setShowReset(true)} style={{ border: "none", background: "none", cursor: "pointer", fontSize: 12, color: C.textMuted, fontFamily: "'DM Sans',sans-serif" }}>
-            Recomeçar jornada
-          </button>
-        ) : (
-          <div style={{ padding: 16, background: C.overtime + "10", borderRadius: 12, border: `1px solid ${C.overtime}30`, animation: "fadeIn .3s ease" }}>
-            <div style={{ fontSize: 13, color: C.text, marginBottom: 10 }}>Tem certeza? Isso apagará todos os registros.</div>
-            <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
-              <Btn v="danger" onClick={() => { resetJourney(); setShowReset(false); }} style={{ fontSize: 12 }}>Sim, recomeçar</Btn>
-              <Btn v="ghost" onClick={() => setShowReset(false)} style={{ fontSize: 12 }}>Cancelar</Btn>
-            </div>
-          </div>
-        )}
+      {/* Vontades e Vitórias - SIDE BY SIDE */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
+        <EntrySection title="Vontades" emoji="⚡" entries={cravings} type="craving" onAdd={addEntry} color={C.medium} />
+        <EntrySection title="Vitórias" emoji="🏆" entries={victories} type="victory" onAdd={addEntry} color={C.done} />
       </div>
     </div>
   );

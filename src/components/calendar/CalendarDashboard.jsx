@@ -47,10 +47,15 @@ export default function CalendarDashboard({ allTasks, history, priorities, phase
   }, [allTasks, now]);
 
   const nowMin = now.getHours() * 60 + now.getMinutes();
-  const currentTask = useMemo(() => todayTasks.find((t) => {
-    const [h, m] = t.startTime.split(":").map(Number);
-    return nowMin >= (h * 60 + m) && nowMin < (h * 60 + m + t.duration);
-  }) || null, [todayTasks, nowMin]);
+  // Priority: task with status "active" (user pressed play), then time-based
+  const currentTask = useMemo(() => {
+    const activeStatus = todayTasks.find((t) => t.status === STATUS.ACTIVE);
+    if (activeStatus) return activeStatus;
+    return todayTasks.find((t) => {
+      const [h, m] = t.startTime.split(":").map(Number);
+      return nowMin >= (h * 60 + m) && nowMin < (h * 60 + m + t.duration) && t.status !== STATUS.DONE && t.status !== STATUS.PARTIAL;
+    }) || null;
+  }, [todayTasks, nowMin]);
 
   const nextTask = useMemo(() => todayTasks.find((t) => {
     const [h, m] = t.startTime.split(":").map(Number);
