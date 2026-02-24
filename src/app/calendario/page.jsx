@@ -8,6 +8,7 @@ import { useQuickLinks } from "@/hooks/useQuickLinks";
 import { useFinance } from "@/hooks/useFinance";
 import { useLiberty } from "@/hooks/useLiberty";
 import AppShell from "@/components/layout/AppShell";
+import ModuleGuard from "@/components/layout/ModuleGuard";
 import OnboardingModal from "@/components/layout/OnboardingModal";
 import ReplanModal from "@/components/calendar/ReplanModal";
 import CalendarDashboard from "@/components/calendar/CalendarDashboard";
@@ -22,7 +23,6 @@ export default function CalendarioPage() {
   const { totalReserved } = useFinance();
   const { smokeDate } = useLiberty();
 
-  // ALL hooks MUST be before any conditional return
   const [showOnboard, setShowOnboard] = useState(false);
 
   useEffect(() => {
@@ -37,28 +37,29 @@ export default function CalendarioPage() {
     try { localStorage.setItem("sga_onboarding_done", "1"); } catch {}
   };
 
-  // Conditional return AFTER all hooks
   if (authLoading || tasksLoading) return <AppShell><Loading /></AppShell>;
 
   const pendingTasks = getPendingPastTasks ? getPendingPastTasks() : [];
 
   return (
-    <AppShell>
-      {showOnboard && <OnboardingModal onDismiss={dismissOnboard} />}
-      {pendingTasks.length > 0 && <ReplanModal pendingTasks={pendingTasks} onReplan={rescheduleTask} />}
-      <CalendarDashboard
-        allTasks={tasks}
-        history={history}
-        priorities={priorities}
-        phase={phase}
-        quickLinks={links}
-        onUpdatePriorities={savePriorities}
-        onUpdatePhase={savePhase}
-        onAddLink={addLink}
-        onRemoveLink={removeLink}
-        smokeDate={smokeDate}
-        totalReserved={totalReserved}
-      />
-    </AppShell>
+    <ModuleGuard module="calendario">
+      <AppShell>
+        {showOnboard && <OnboardingModal onDismiss={dismissOnboard} />}
+        {pendingTasks.length > 0 && <ReplanModal pendingTasks={pendingTasks} onReplan={rescheduleTask} />}
+        <CalendarDashboard
+          allTasks={tasks}
+          history={history}
+          priorities={priorities}
+          phase={phase}
+          quickLinks={links}
+          onUpdatePriorities={savePriorities}
+          onUpdatePhase={savePhase}
+          onAddLink={addLink}
+          onRemoveLink={removeLink}
+          smokeDate={smokeDate}
+          totalReserved={totalReserved}
+        />
+      </AppShell>
+    </ModuleGuard>
   );
 }

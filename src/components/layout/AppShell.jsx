@@ -7,11 +7,11 @@ import StatusBar from "@/components/layout/StatusBar";
 import { C } from "@/lib/constants";
 
 const NAV_ITEMS = [
-  { key: "/calendario", label: "Gestão de Tarefas", icon: "📅", module: null },
-  { key: "/financeiro", label: "Gestão Financeira", icon: "💰", module: null },
+  { key: "/calendario", label: "Gestão de Tarefas", icon: "📅", module: "calendario" },
+  { key: "/financeiro", label: "Gestão Financeira", icon: "💰", module: "financeiro" },
   { key: "/liberdade", label: "Jornada da Liberdade", icon: "🚭", module: "liberdade" },
-  { key: "/dados", label: "Dados & Backup", icon: "💾", module: null },
-  { key: "/docs", label: "Documentação", icon: "📖", module: null },
+  { key: "/dados", label: "Dados & Backup", icon: "💾", module: "dados" },
+  { key: "/docs", label: "Documentação", icon: "📖", module: "docs" },
 ];
 
 export default function AppShell({ children }) {
@@ -19,7 +19,7 @@ export default function AppShell({ children }) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, signOut } = useAuth();
-  const { hasAccess, isAdmin } = useModules();
+  const { hasAccess, isAdmin, role } = useModules();
 
   const navigate = (path) => {
     router.push(path);
@@ -28,6 +28,8 @@ export default function AppShell({ children }) {
   };
 
   if (!user) return null;
+
+  const visibleNav = NAV_ITEMS.filter((item) => hasAccess(item.module));
 
   return (
     <>
@@ -49,10 +51,20 @@ export default function AppShell({ children }) {
         <div style={{ padding: "0 20px", marginBottom: 32 }}>
           <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 700, color: C.text }}>SGA</div>
           <div style={{ fontSize: 11, color: C.textMuted }}>gestão de atividades</div>
+          {role && (
+            <div style={{
+              fontSize: 9, marginTop: 6, padding: "2px 8px", borderRadius: 4, display: "inline-block",
+              background: isAdmin ? C.accent + "20" : C.done + "15",
+              color: isAdmin ? C.accent : C.done,
+              fontWeight: 700, textTransform: "uppercase",
+            }}>
+              {role}
+            </div>
+          )}
         </div>
 
         <div style={{ flex: 1 }}>
-          {NAV_ITEMS.filter((item) => !item.module || hasAccess(item.module)).map((item) => {
+          {visibleNav.map((item) => {
             const isActive = pathname.startsWith(item.key);
             return (
               <button key={item.key} onClick={() => navigate(item.key)} style={{

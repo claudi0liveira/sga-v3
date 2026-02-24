@@ -3,31 +3,42 @@ import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase-browser";
 import { useAuth } from "./useAuth";
 
-// Modules that require explicit permission (admin grants access)
-const RESTRICTED_MODULES = ["liberdade"];
+// ALL controllable modules
+const ALL_MODULES = ["calendario", "financeiro", "liberdade", "dados", "docs"];
 
 export function useModules() {
   const { user } = useAuth();
   const supabase = createClient();
   const [modules, setModules] = useState({});
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [role, setRole] = useState("colaborador");
   const [loading, setLoading] = useState(true);
+
+  const isAdmin = role === "admin";
 
   const fetch = useCallback(async () => {
     if (!user) return;
     setLoading(true);
 
-    // Check if admin
-    const { data: adminData } = await supabase
-      .from("admins")
-      .select("user_id")
-      .eq("user_id", user.id)
+    // Get user profile with role
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
       .single();
-    
-    const admin = !!adminData;
-    setIsAdmin(admin);
 
-    // Get user modules
+    const userRole = profile?.role || "colaborador";
+    setRole(userRole);
+
+    // Admin has access to everything
+    if (userRole === "admin") {
+      const mods = {};
+      ALL_MODULES.forEach((m) => { mods[m] = true; });
+      setModules(mods);
+      setLoading(false);
+      return;
+    }
+
+    // Get user modules from DB
     const { data: modData } = await supabase
       .from("user_modules")
       .select("*")
@@ -38,11 +49,6 @@ export function useModules() {
       mods[m.module] = m.enabled;
     });
 
-    // Admin has access to everything
-    if (admin) {
-      RESTRICTED_MODULES.forEach((m) => { mods[m] = true; });
-    }
-
     setModules(mods);
     setLoading(false);
   }, [user]);
@@ -51,11 +57,9 @@ export function useModules() {
 
   // Check if user has access to a module
   const hasAccess = useCallback((module) => {
-    // Free modules - always accessible
-    if (!RESTRICTED_MODULES.includes(module)) return true;
-    // Restricted modules - need explicit grant
+    if (role === "admin") return true;
     return modules[module] === true;
-  }, [modules]);
+  }, [modules, role]);
 
-  return { modules, isAdmin, loading, hasAccess, refetch: fetch };
+  return { modules, role, isAdmin, loading, hasAccess, refetch: fetch, ALL_MODULES };
 }

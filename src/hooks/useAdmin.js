@@ -14,10 +14,10 @@ export function useAdmin() {
     if (!user) return;
     setLoading(true);
 
-    // Get all profiles
+    // Get all profiles (admin can see all via policy)
     const { data: profiles } = await supabase
       .from("profiles")
-      .select("id, name, created_at")
+      .select("id, name, role, created_at")
       .order("created_at", { ascending: true });
 
     // Get all module grants
@@ -32,6 +32,7 @@ export function useAdmin() {
 
   useEffect(() => { fetch(); }, [fetch]);
 
+  // Toggle a module for a user
   const toggleModule = async (userId, module, enabled) => {
     if (enabled) {
       await supabase.from("user_modules").upsert({
@@ -49,9 +50,34 @@ export function useAdmin() {
     await fetch();
   };
 
+  // Change user role
+  const setUserRole = async (userId, role) => {
+    await supabase.from("profiles")
+      .update({ role })
+      .eq("id", userId);
+    
+    // If promoting to admin, grant all modules
+    if (role === "admin") {
+      const allMods = ["calendario", "financeiro", "liberdade", "dados", "docs"];
+      for (const mod of allMods) {
+        await supabase.from("user_modules").upsert({
+          user_id: userId,
+          module: mod,
+          enabled: true,
+          granted_by: user.id,
+        }, { onConflict: "user_id,module" });
+      }
+    }
+    await fetch();
+  };
+
   const getUserModule = (userId, module) => {
     return modules.find((m) => m.user_id === userId && m.module === module);
   };
 
-  return { users, modules, loading, toggleModule, getUserModule, refetch: fetch };
+  const getUserModuleCount = (userId) => {
+    return modules.filter((m) => m.user_id === userId && m.enabled).length;
+  };
+
+  return { users, modules, loading, toggleModule, setUserRole, getUserModule, getUserModuleCount, refetch: fetch };
 }
