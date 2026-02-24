@@ -53,6 +53,34 @@ function toDb(task, userId) {
   };
 }
 
+
+// ============================================================
+// FIX: Supabase retorna no máximo 1000 rows por query.
+// Com 2657+ tasks, a query antiga cortava os dados.
+// Essa função pagina automaticamente para buscar TUDO.
+// ============================================================
+async function fetchAllRows(supabase, table, userId) {
+  const PAGE_SIZE = 1000;
+  let allData = [];
+  let from = 0;
+
+  while (true) {
+    const { data, error } = await supabase
+      .from(table)
+      .select("*")
+      .eq("user_id", userId)
+      .order("start_time", { ascending: true })
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error || !data || data.length === 0) break;
+    allData = allData.concat(data);
+    if (data.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
+  }
+
+  return allData;
+}
+
 export function useTasks() {
   const { user } = useAuth();
   const supabase = createClient();
@@ -63,13 +91,9 @@ export function useTasks() {
   const fetchTasks = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    const { data, error } = await supabase
-      .from("tasks")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("start_time", { ascending: true });
+    const data = await fetchAllRows(supabase, "tasks", user.id);
 
-    if (!error && data) {
+    if (data.length > 0) {
       const grouped = {};
       data.forEach((row) => {
         const dk = row.date;
