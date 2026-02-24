@@ -22,10 +22,7 @@ export default function CalendarioPage() {
   const { totalReserved } = useFinance();
   const { smokeDate } = useLiberty();
 
-  if (authLoading || tasksLoading) return <AppShell><Loading /></AppShell>;
-
-  const pendingTasks = getPendingPastTasks();
-
+  // ALL hooks MUST be before any conditional return
   const [showOnboard, setShowOnboard] = useState(false);
 
   useEffect(() => {
@@ -39,6 +36,11 @@ export default function CalendarioPage() {
     setShowOnboard(false);
     try { localStorage.setItem("sga_onboarding_done", "1"); } catch {}
   };
+
+  // Conditional return AFTER all hooks
+  if (authLoading || tasksLoading) return <AppShell><Loading /></AppShell>;
+
+  const pendingTasks = getPendingPastTasks ? getPendingPastTasks() : [];
 
   return (
     <AppShell>
