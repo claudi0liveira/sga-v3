@@ -8,6 +8,7 @@ import { useFinance } from "@/hooks/useFinance";
 import { useTasks } from "@/hooks/useTasks";
 import { usePriorities } from "@/hooks/usePriorities";
 import { useNow } from "@/hooks/useNow";
+import { useModules } from "@/hooks/useModules";
 
 function StatusItem({ icon, label, color, visible, onToggle, onClick }) {
   return (
@@ -34,6 +35,7 @@ function StatusItem({ icon, label, color, visible, onToggle, onClick }) {
 export default function StatusBar() {
   const router = useRouter();
   const now = useNow(60000);
+  const { hasAccess } = useModules();
   const { smokeDate } = useLiberty();
   const { totalReserved } = useFinance();
   const { allTasks } = useTasks();
@@ -82,7 +84,7 @@ export default function StatusBar() {
 
   const items = [];
 
-  if (libertyDays !== null) {
+  if (libertyDays !== null && hasAccess("liberdade")) {
     items.push(
       <StatusItem
         key="liberty"
@@ -96,7 +98,7 @@ export default function StatusBar() {
     );
   }
 
-  if (totalReserved !== undefined) {
+  if (totalReserved !== undefined && hasAccess("financeiro")) {
     items.push(
       <StatusItem
         key="reserved"
@@ -110,7 +112,7 @@ export default function StatusBar() {
     );
   }
 
-  if (activeTask) {
+  if (activeTask && hasAccess("calendario")) {
     const [h, m] = (activeTask.time || "09:00").split(":").map(Number);
     const end = h * 60 + m + (activeTask.duration || 30);
     const remaining = end - nowMinutes;
@@ -127,7 +129,7 @@ export default function StatusBar() {
     );
   }
 
-  if (focus) {
+  if (focus && hasAccess("calendario")) {
     items.push(
       <StatusItem
         key="focus"
