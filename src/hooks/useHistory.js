@@ -15,7 +15,10 @@ export function useHistory() {
     const { data } = await supabase.from("day_history").select("*").eq("user_id", user.id);
     if (data) {
       const h = {};
-      data.forEach((row) => { h[row.date] = { snapshot: row.snapshot, note: row.note }; });
+      data.forEach((row) => {
+        const snap = typeof row.snapshot === "string" ? (() => { try { return JSON.parse(row.snapshot); } catch { return []; } })() : row.snapshot;
+        h[row.date] = { snapshot: snap, note: row.note };
+      });
       setHistory(h);
     }
     setLoading(false);

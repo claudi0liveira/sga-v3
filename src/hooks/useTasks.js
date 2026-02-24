@@ -19,7 +19,7 @@ function fromDb(row) {
     timerRunning: row.timer_running,
     accumulatedTime: row.accumulated_time,
     note: row.note,
-    todos: row.todos || [],
+    todos: typeof row.todos === "string" ? (() => { try { return JSON.parse(row.todos); } catch { return []; } })() : Array.isArray(row.todos) ? row.todos : [],
     replanCount: row.replan_count,
     replanFrom: row.replan_from,
     rangeGroup: row.range_group,
