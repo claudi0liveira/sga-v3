@@ -14,6 +14,8 @@ const SECTIONS = [
         { emoji: "💰", label: "Gestão Financeira", desc: "Rendas, despesas, saldo mensal e reservas" },
         { emoji: "🚭", label: "Jornada da Liberdade", desc: "Rastreador de dias sem fumar com marcos e benefícios" },
         { emoji: "📖", label: "Documentação", desc: "Você está aqui! Guia completo do sistema" },
+        { emoji: "💾", label: "Dados & Backup", desc: "Exportar e importar dados, backups regulares" },
+        { emoji: "⚙️", label: "Painel Admin", desc: "Controle de acesso a módulos (admin)" },
       ]}
     ]
   },
@@ -84,23 +86,26 @@ const SECTIONS = [
         { emoji: "📊", label: "Desp. Projetadas", desc: "Soma de todas as despesas" },
         { emoji: "🐷", label: "Reservado", desc: "Total acumulado em reservas" },
       ]},
-      { type: "tutorial", title: "Adicionar uma renda", steps: ["Seção 'Rendas' → clique '+ Renda'","Preencha: nome, valor e dia de recebimento","Clique ✓ para salvar","Para remover, clique ✕"] },
+      { type: "tutorial", title: "Adicionar uma renda", steps: ["Seção 'Rendas' → clique '+ Renda'","Preencha: nome, valor e dia de recebimento","Escolha o escopo: 🌐 Global (aparece em todos os meses) ou 📅 Só este mês","Clique ✓ para salvar. Badge GLOBAL/MÊS aparece na lista","Para remover, clique ✕"] },
+      { type: "info", emoji: "🌐", title: "Renda Global vs Mensal", text: "Rendas globais (ex: salário) aparecem em todos os meses automaticamente até serem removidas. Rendas mensais (ex: bônus) ficam vinculadas ao mês selecionado." },
       { type: "tutorial", title: "Adicionar uma despesa", steps: ["Seção 'Despesas' → clique '+ Despesa'","Preencha: nome, valor e categoria","Marque como paga clicando no ○","Para remover, clique ✕"] },
       { type: "tutorial", title: "Sistema de Reservas", steps: ["Seção 'Reservas' → '+ Reserva'","Dê um nome (ex: Emergência)","Dentro, clique '+ Adicionar valor'","O total acumula automaticamente"] },
-      { type: "info", emoji: "📅", title: "Navegação por meses", text: "Use as setas ‹ › no topo para alternar meses. Cada mês tem suas despesas. Rendas são fixas." }
+      { type: "info", emoji: "📅", title: "Navegação por meses", text: "Use as setas ‹ › no topo para alternar meses. Cada mês tem suas despesas independentes. Rendas globais aparecem em todos os meses, rendas mensais só no mês vinculado." }
     ]
   },
   {
     id: "liberty", icon: "🚭", title: "Jornada da Liberdade", color: "#34d399",
     content: [
       { type: "intro", text: "Módulo dedicado ao acompanhamento de dias sem fumar com marcos, benefícios, vontades e vitórias." },
-      { type: "tutorial", title: "Começar a jornada", steps: ["Acesse pelo menu ☰ → Jornada da Liberdade","Clique '🚭 Começo AGORA' para hoje","Ou selecione data personalizada","O contador começa imediatamente"] },
+      { type: "tutorial", title: "Começar a jornada", steps: ["Acesse pelo menu ☰ → Jornada da Liberdade","Clique '🚭 Começo AGORA' para hoje","Ou selecione data personalizada (inclusive futura!)","Se a data for futura, o contador mostra contagem regressiva negativa (-5d, -3h...)","Quando a data chega, transiciona automaticamente para contagem positiva"] },
       { type: "features", title: "O que você acompanha", items: [
-        { emoji: "⚡", label: "Registro de Vontades", desc: "Registre vontades para identificar padrões" },
-        { emoji: "🏆", label: "Vitórias", desc: "Celebre cada conquista" },
+        { emoji: "⚡", label: "Registro de Vontades", desc: "Registre gatilhos e vontades (lado esquerdo)" },
+        { emoji: "🏆", label: "Vitórias", desc: "Celebre cada conquista (lado direito)" },
         { emoji: "🏅", label: "Marcos", desc: "1, 3, 7, 14, 21, 30, 60, 90, 120, 180, 365 dias" },
         { emoji: "🌱", label: "Benefícios", desc: "Benefícios de saúde desbloqueados a cada marco" },
       ]},
+      { type: "info", emoji: "🔄", title: "Recomeçar jornada", text: "O botão 'Recomeçar' fica logo abaixo do contador com destaque visual. Ao recomeçar, o sistema registra automaticamente nas Vontades quantos dias você estava livre (ex: '🔄 Recomeço — estava há 15 dias livre'). Assim você tem histórico de todas as tentativas." },
+      { type: "info", emoji: "📐", title: "Layout lado a lado", text: "Vontades e Vitórias ficam lado a lado em colunas, facilitando a comparação. O padrão visual ajuda a identificar se suas vitórias superam as vontades." },
       { type: "info", emoji: "💪", title: "Quando a vontade vier", text: "A vontade dura 3-5 minutos. Respire fundo, beba água e registre no app. Cada registro é uma vitória." }
     ]
   },
@@ -120,7 +125,70 @@ const SECTIONS = [
     ]
   },
   {
-    id: "data", icon: "💾", title: "Seus dados", color: C.textMuted,
+    id: "onboarding", icon: "👋", title: "Onboarding (primeiro acesso)", color: "#6C3FB5",
+    content: [
+      { type: "intro", text: "No primeiro acesso ao SGA, um wizard de boas-vindas apresenta o sistema em 5 passos. Você pode pular a qualquer momento." },
+      { type: "steps", title: "Os 5 passos do onboarding", items: [
+        { step: 1, title: "Bem-vindo ao SGA!", desc: "Apresentação geral do sistema e sua proposta." },
+        { step: 2, title: "Planeje seu dia", desc: "Visão geral de tarefas, blocos e progresso." },
+        { step: 3, title: "Controle financeiro", desc: "Rendas, despesas e reservas." },
+        { step: 4, title: "Jornada da Liberdade", desc: "Contador, marcos e registro." },
+        { step: 5, title: "Seus dados na nuvem", desc: "Diferencial do Supabase vs localStorage." },
+      ]},
+      { type: "info", emoji: "📖", title: "Documentação", text: "No último passo, há um botão para acessar esta documentação. O onboarding só aparece uma vez." }
+    ]
+  },
+  {
+    id: "admin", icon: "⚙️", title: "Painel Admin (módulos)", color: "#D4770B",
+    content: [
+      { type: "intro", text: "O SGA tem um sistema de controle de módulos por usuário. Alguns módulos são livres (todos acessam) e outros são restritos (admin libera)." },
+      { type: "features", title: "Módulos e acesso", items: [
+        { emoji: "📅", label: "Calendário", desc: "LIVRE — todos os usuários acessam" },
+        { emoji: "💰", label: "Gestão Financeira", desc: "LIVRE — todos os usuários acessam" },
+        { emoji: "📖", label: "Documentação", desc: "LIVRE — todos os usuários acessam" },
+        { emoji: "💾", label: "Dados & Backup", desc: "LIVRE — todos os usuários acessam" },
+        { emoji: "🚭", label: "Jornada da Liberdade", desc: "RESTRITO — admin precisa liberar" },
+      ]},
+      { type: "tutorial", title: "Como liberar um módulo", steps: ["Acesse /admin (visível no menu só para admins)","Encontre o usuário na lista","Ative o toggle do módulo desejado","O usuário verá o módulo no menu imediatamente"] },
+      { type: "info", emoji: "🔒", title: "Módulos restritos", text: "Módulos restritos ficam ocultos do menu e a rota (/liberdade) mostra mensagem de acesso restrito. O usuário não sabe que o módulo existe até ser liberado." },
+      { type: "info", emoji: "🛡️", title: "Como se tornar admin", text: "Execute no SQL Editor do Supabase: INSERT INTO admins (user_id) VALUES ('seu-uuid'). Admins veem o item 'Painel Admin' no menu lateral." }
+    ]
+  },
+  {
+    id: "backup", icon: "💾", title: "Dados & Backup", color: "#2E75B6",
+    content: [
+      { type: "intro", text: "O módulo Dados & Backup permite exportar e importar todos os seus dados do SGA. Acessível pelo menu ☰ → Dados & Backup." },
+      { type: "tutorial", title: "Exportar backup", steps: ["Acesse Dados & Backup pelo menu","Clique '💾 Exportar Backup'","Um arquivo sga-backup-YYYY-MM-DD.json será baixado","Guarde em local seguro (Google Drive, Dropbox, etc.)"] },
+      { type: "tutorial", title: "Importar backup", steps: ["Clique '📂 Selecionar Arquivo'","Escolha um arquivo .json de backup","O sistema importa via upsert (atualiza existentes, cria novos)","Recarregue a página para ver os dados"] },
+      { type: "info", emoji: "📊", title: "Contador de dados", text: "Clique '🔄 Contar' para ver quantos registros você tem em cada tabela (tarefas, rendas, despesas, etc.)." },
+      { type: "info", emoji: "☁️", title: "Dados na nuvem", text: "Seus dados já estão salvos no Supabase. O backup é uma cópia extra de segurança. Mesmo sem backup, seus dados persistem entre dispositivos." },
+      { type: "info", emoji: "⚠️", title: "Import não apaga", text: "O Import nunca apaga dados existentes. Ele só adiciona novos ou atualiza registros com mesmo ID. Para começar do zero, delete manualmente no Supabase." }
+    ]
+  },
+  {
+    id: "changelog", icon: "📋", title: "Changelog (novidades)", color: "#34d399",
+    content: [
+      { type: "intro", text: "Histórico de atualizações do SGA." },
+      { type: "features", title: "v3.1 — Fevereiro 2026", items: [
+        { emoji: "📐", label: "Liberty: layout lado a lado", desc: "Vontades e Vitórias agora ficam em colunas" },
+        { emoji: "🔄", label: "Liberty: reset registra dias", desc: "Ao recomeçar, registra quantos dias estava livre" },
+        { emoji: "⏳", label: "Liberty: datas negativas", desc: "Contagem regressiva com visual roxo para datas futuras" },
+        { emoji: "🌐", label: "Finanças: renda Global/Mensal", desc: "Escolha se a renda aparece em todos os meses ou só no atual" },
+        { emoji: "▶️", label: "Dashboard: task ativa por play", desc: "A atividade mostrada é a que está com play, não só por horário" },
+        { emoji: "👋", label: "Onboarding wizard", desc: "5 passos de boas-vindas no primeiro acesso" },
+        { emoji: "🔐", label: "Controle de módulos", desc: "Admin pode liberar/restringir módulos por usuário" },
+        { emoji: "💾", label: "Dados & Backup", desc: "Export/Import de todos os dados em .json" },
+      ]},
+      { type: "features", title: "v3.0 — Fevereiro 2026", items: [
+        { emoji: "🚀", label: "Migração completa", desc: "De app.jsx monolítico para Next.js + Supabase" },
+        { emoji: "☁️", label: "Dados na nuvem", desc: "Supabase PostgreSQL com RLS" },
+        { emoji: "🔑", label: "Autenticação", desc: "Login/registro com email e senha" },
+        { emoji: "📱", label: "Multi-dispositivo", desc: "Acesse de qualquer lugar com sua conta" },
+      ]}
+    ]
+  },
+  {
+    id: "data", icon: "🔒", title: "Segurança dos dados", color: C.textMuted,
     content: [
       { type: "intro", text: "Na versão v3.0, seus dados ficam salvos com segurança no Supabase (PostgreSQL na nuvem). Você pode acessar de qualquer dispositivo com sua conta." },
       { type: "info", emoji: "🔒", title: "Segurança", text: "Seus dados são protegidos por Row Level Security (RLS). Apenas você tem acesso às suas informações, mesmo no banco de dados." },
@@ -318,7 +386,7 @@ export default function DocsPageComponent() {
         </>
       )}
 
-      <div style={{ textAlign: "center", marginTop: 24, fontSize: 12, color: C.textMuted }}>SGA — Sistema de Gestão de Atividades · v3.0</div>
+      <div style={{ textAlign: "center", marginTop: 24, fontSize: 12, color: C.textMuted }}>SGA — Sistema de Gestão de Atividades · v3.1</div>
     </div>
   );
 }
