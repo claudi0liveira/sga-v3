@@ -23,6 +23,11 @@ export default function TaskItem({ task, now, onUpdate, onEdit, onReschedule, on
   const pct = task.duration > 0 ? (accM / task.duration) * 100 : 0;
   const rem = Math.max(0, Math.round(task.duration - accM));
 
+  // ── COR DA PRIORIDADE NA BORDA ─────────────────────────
+  const priorityColor = task.priority === "Alta" ? "#E74C3C"
+    : task.priority === "Média" ? "#F39C12"
+    : "#27AE60";
+
   // Timer tick
   useEffect(() => {
     if (run && !fin) {
@@ -52,7 +57,8 @@ export default function TaskItem({ task, now, onUpdate, onEdit, onReschedule, on
   return (
     <div style={{
       padding: "16px 18px", borderRadius: 14, background: C.surface,
-      border: `1px solid ${eff === STATUS.ACTIVE ? C.active + "60" : C.border}`,
+      border: `1px solid ${eff === STATUS.ACTIVE ? C.active + "60" : priorityColor + "40"}`,
+      borderLeft: `4px solid ${priorityColor}`,
       marginBottom: 10, transition: "all .3s",
       boxShadow: eff === STATUS.ACTIVE ? `0 0 0 2px ${C.active}20` : "none",
       opacity: fin ? 0.65 : 1,

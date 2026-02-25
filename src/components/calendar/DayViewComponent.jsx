@@ -73,22 +73,27 @@ export default function DayViewComponent({ selectedDate, tasks, allTasks, onAddT
     setShowCloseModal(true);
   };
 
-  // Group tasks by block
+  // ── SEPARAR ATIVAS vs CONCLUÍDAS ──────────────────────
+  const finishedStatuses = [STATUS.DONE, STATUS.PARTIAL, STATUS.SKIPPED];
+  const activeTasks = tasks.filter((t) => !finishedStatuses.includes(t.status));
+  const doneTasks = tasks.filter((t) => finishedStatuses.includes(t.status));
+
+  // Group ACTIVE tasks by block (concluídas ficam separadas)
   const grouped = useMemo(() => {
     const g = {};
     BLOCKS.forEach((b) => { g[b.key] = []; });
-    tasks.forEach((t) => {
+    activeTasks.forEach((t) => {
       const block = t.block || getBlock(t.priority);
       if (!g[block]) g[block] = [];
       g[block].push(t);
     });
     Object.keys(g).forEach((k) => g[k].sort((a, b) => a.startTime.localeCompare(b.startTime)));
     return g;
-  }, [tasks]);
+  }, [activeTasks]);
 
-  const allResolved = tasks.length > 0 && tasks.every((t) => [STATUS.DONE, STATUS.PARTIAL, STATUS.SKIPPED].includes(t.status));
+  const allResolved = tasks.length > 0 && tasks.every((t) => finishedStatuses.includes(t.status));
   const doneCount = tasks.filter((t) => t.status === STATUS.DONE).length;
-  const resolvedCount = tasks.filter((t) => [STATUS.DONE, STATUS.PARTIAL, STATUS.SKIPPED].includes(t.status)).length;
+  const resolvedCount = tasks.filter((t) => finishedStatuses.includes(t.status)).length;
   const pct = tasks.length > 0 ? (resolvedCount / tasks.length) * 100 : 0;
 
   const openForm = () => {
@@ -112,7 +117,6 @@ export default function DayViewComponent({ selectedDate, tasks, allTasks, onAddT
             {isPst && <div style={{ fontSize: 12, color: C.textMuted }}>Dia passado · Histórico</div>}
           </div>
         </div>
-        {/* Action buttons */}
         {isTod && tasks.length > 0 && (
           <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
             <button onClick={() => setShowClearDay(true)} style={{ border: `1px solid ${C.overtime}40`, background: "transparent", borderRadius: 10, padding: "8px 14px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 500, color: C.overtime }}>
@@ -169,7 +173,7 @@ export default function DayViewComponent({ selectedDate, tasks, allTasks, onAddT
         )}
       </div>
 
-      {/* ─── Task Blocks ─── */}
+      {/* ─── Task Blocks (ATIVAS apenas) ─── */}
       {BLOCKS.map((block) => {
         const bt = grouped[block.key] || [];
         if (!bt.length) return null;
@@ -190,6 +194,33 @@ export default function DayViewComponent({ selectedDate, tasks, allTasks, onAddT
           </div>
         );
       })}
+
+      {/* ─── SEÇÃO CONCLUÍDAS ─── */}
+      {doneTasks.length > 0 && (
+        <div style={{ marginTop: 8 }}>
+          {/* Separator */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "20px 0 14px", padding: "0 4px" }}>
+            <div style={{ flex: 1, height: 1, background: C.done + "30" }} />
+            <span style={{
+              fontSize: 11, fontWeight: 600, color: C.done,
+              letterSpacing: "0.5px", textTransform: "uppercase",
+            }}>
+              ✓ Concluídas ({doneTasks.length})
+            </span>
+            <div style={{ flex: 1, height: 1, background: C.done + "30" }} />
+          </div>
+          {/* Done tasks sorted by time */}
+          {[...doneTasks].sort((a, b) => a.startTime.localeCompare(b.startTime)).map((t) => (
+            <div key={t.id} ref={(el) => { taskRefs.current[t.id] = el; }}>
+              <TaskItem
+                task={t} now={now} onUpdate={onUpdate}
+                onEdit={setEditingTask} onReschedule={setReschedulingTask}
+                onDelete={onDelete}
+              />
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* ─── Floating + button ─── */}
       {!isPst && !showForm && tasks.length > 0 && (
